@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supabase Login</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f2f2f2;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.box{
+background:white;
+padding:30px;
+border-radius:10px;
+width:340px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#2f65d9;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.msg{
+text-align:center;
+margin-top:10px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Register</h2>
+
+<input type="email" id="regEmail" placeholder="Email">
+<input type="password" id="regPass" placeholder="Password">
+
+<button onclick="register()">Daftar</button>
+
+<hr>
+
+<h2>Login</h2>
+
+<input type="email" id="logEmail" placeholder="Email">
+<input type="password" id="logPass" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<div class="msg" id="msg"></div>
+
+</div>
+
+<script>
+
+// MASUKKAN DATA API SUPABASE DI SINI
+const supabaseUrl = "https://abcxyzcompany.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+// koneksi
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+function msg(t,c){
+let m=document.getElementById("msg");
+m.innerText=t;
+m.style.color=c;
+}
+
+// REGISTER
+async function register(){
+
+let email=document.getElementById("regEmail").value;
+let password=document.getElementById("regPass").value;
+
+const { error } = await client
+.from("users")
+.insert([{ email:email, password:password }]);
+
+if(error){
+msg("Email sudah terdaftar","red");
+}else{
+msg("Register berhasil","green");
+}
+
+}
+
+// LOGIN
+async function login(){
+
+let email=document.getElementById("logEmail").value;
+let password=document.getElementById("logPass").value;
+
+const { data } = await client
+.from("users")
+.select("*")
+.eq("email",email)
+.eq("password",password)
+.single();
+
+if(data){
+
+msg("Login berhasil","green");
+
+setTimeout(()=>{
+document.body.innerHTML="<h1>Login Berhasil</h1>";
+},1000);
+
+}else{
+
+msg("Email atau password salah","red");
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
