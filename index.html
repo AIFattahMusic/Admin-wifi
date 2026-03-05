@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISP Billing Admin</title>
+
+<!-- UI -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* === KONEKSI SUPABASE === */
+const supabaseClient = supabase.createClient(
+"https://xbtuqubynkcqsiwavxad.supabase.co",
+"sb_publishable_V0DzqUUUFKhFpn3w3dJiPw_rqnzkWo4"
+);
+
+/* === LOGIN === */
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert("Login gagal: " + error.message);
+    return;
+  }
+
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+
+  loadUsers();
+}
+
+/* === LOGOUT === */
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+/* === TAMBAH PELANGGAN === */
+async function addUser(){
+
+  const nama = document.getElementById("nama").value;
+  const paket = document.getElementById("paket").value;
+  const harga = document.getElementById("harga").value;
+  const tempo = document.getElementById("tempo").value;
+
+  if(!nama || !paket || !harga || !tempo){
+    alert("Isi semua data");
+    return;
+  }
+
+  await supabaseClient
+    .from("pelanggan")
+    .insert([{
+      nama,
+      paket,
+      harga,
+      jatuh_tempo: tempo
+    }]);
+
+  document.getElementById("nama").value="";
+  document.getElementById("paket").value="";
+  document.getElementById("harga").value="";
+  document.getElementById("tempo").value="";
+
+  loadUsers();
+}
+
+/* === HAPUS PELANGGAN === */
+async function deleteUser(id){
+
+  await supabaseClient
+    .from("pelanggan")
+    .delete()
+    .eq("id", id);
+
+  loadUsers();
+}
+
+/* === LOAD DATA === */
+async function loadUsers(){
+
+  const { data } = await supabaseClient
+    .from("pelanggan")
+    .select("*")
+    .order("id",{ascending:false});
+
+  const list = document.getElementById("users");
+  list.innerHTML="";
+
+  let total=0;
+  let aktif=0;
+  let telat=0;
+  let income=0;
+
+  data.forEach(u=>{
+
+    total++;
+    income += parseInt(u.harga);
+
+    let today = new Date();
+    let tempo = new Date(u.jatuh_tempo);
+
+    let status="Aktif";
+    let color="green";
+
+    if(today > tempo){
+      status="Telat";
+      color="red";
+      telat++;
+    }else{
+      aktif++;
+    }
+
+    list.innerHTML += `
+      <div class="border-b p-3 flex justify-between">
+        <div>
+          <p class="font-semibold">${u.nama}</p>
+          <p class="text-sm text-gray-500">${u.paket}</p>
+        </div>
+
+        <div class="text-right">
+          <p class="text-sm">${u.jatuh_tempo}</p>
+
+          <span class="bg-${color}-500 text-white px-2 py-1 rounded text-xs">
+            ${status}
+          </span>
+
+          <br>
+
+          <button onclick="deleteUser(${u.id})"
+            class="text-red-500 text-xs mt-1">
+            hapus
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("aktif").innerText=aktif;
+  document.getElementById("telat").innerText=telat;
+  document.getElementById("income").innerText="Rp "+income;
+}
+</script>
+</head>
+
+<body class="bg-gray-100">
+
+<!-- LOGIN -->
+<div id="loginPage" class="h-screen flex items-center justify-center">
+
+  <div class="bg-white p-6 rounded shadow w-80">
+
+    <h2 class="text-lg font-bold mb-4 text-center">
+      Login Admin
+    </h2>
+
+    <input id="email"
+      class="border w-full p-2 mb-2 rounded"
+      placeholder="Email">
+
+    <input id="password"
+      type="password"
+      class="border w-full p-2 mb-3 rounded"
+      placeholder="Password">
+
+    <button onclick="login()"
+      class="bg-blue-500 text-white w-full p-2 rounded">
+      Login
+    </button>
+
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none">
+
+  <div class="bg-white shadow p-4 flex justify-between">
+
+    <h1 class="text-xl font-bold text-blue-600">
+      📶 ISP Billing Admin
+    </h1>
+
+    <button onclick="logout()" class="text-red-500">
+      Logout
+    </button>
+
+  </div>
+
+  <div class="p-4">
+
+    <!-- STATISTIK -->
+    <div class="grid grid-cols-2 gap-3 mb-5">
+
+      <div class="bg-blue-500 text-white p-4 rounded">
+        Total Pelanggan
+        <p id="total" class="text-2xl font-bold">0</p>
+      </div>
+
+      <div class="bg-green-500 text-white p-4 rounded">
+        Aktif
+        <p id="aktif" class="text-2xl font-bold">0</p>
+      </div>
+
+      <div class="bg-red-500 text-white p-4 rounded">
+        Telat Bayar
+        <p id="telat" class="text-2xl font-bold">0</p>
+      </div>
+
+      <div class="bg-purple-500 text-white p-4 rounded">
+        Pendapatan
+        <p id="income" class="text-2xl font-bold">0</p>
+      </div>
+
+    </div>
+
+    <!-- FORM TAMBAH -->
+    <div class="bg-white p-4 rounded shadow mb-5">
+
+      <h3 class="font-semibold mb-3">
+        Tambah Pelanggan
+      </h3>
+
+      <input id="nama"
+        class="border w-full p-2 mb-2 rounded"
+        placeholder="Nama pelanggan">
+
+      <input id="paket"
+        class="border w-full p-2 mb-2 rounded"
+        placeholder="Paket Mbps">
+
+      <input id="harga"
+        class="border w-full p-2 mb-2 rounded"
+        placeholder="Harga paket">
+
+      <input id="tempo"
+        type="date"
+        class="border w-full p-2 mb-3 rounded">
+
+      <button onclick="addUser()"
+        class="bg-blue-500 text-white px-4 py-2 rounded">
+        Tambah
+      </button>
+
+    </div>
+
+    <!-- LIST PELANGGAN -->
+    <div class="bg-white rounded shadow">
+
+      <div class="p-3 border-b font-semibold">
+        Daftar Pelanggan
+      </div>
+
+      <div id="users"></div>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
