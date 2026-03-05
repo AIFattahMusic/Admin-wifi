@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISP Admin</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+*{
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+margin:0;
+background:#f2f4f7;
+padding-bottom:80px;
+}
+
+.hidden{
+display:none;
+}
+
+.login{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:white;
+padding:30px;
+border-radius:12px;
+width:330px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:10px;
+border:none;
+border-radius:8px;
+background:#2f65d9;
+color:white;
+cursor:pointer;
+margin-top:5px;
+}
+
+.header{
+background:white;
+padding:15px;
+display:flex;
+justify-content:space-between;
+box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.container{
+padding:15px;
+}
+
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.card{
+color:white;
+padding:15px;
+border-radius:10px;
+}
+
+.blue{background:#2f65d9;}
+.green{background:#2fb36a;}
+.orange{background:#ff8b2d;}
+.purple{background:#7b4bff;}
+
+.card span{
+font-size:24px;
+display:block;
+margin-top:5px;
+}
+
+.table{
+background:white;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:10px 0;
+border-bottom:1px solid #eee;
+}
+
+.actions button{
+width:auto;
+padding:5px 8px;
+margin-left:5px;
+}
+
+.status{
+padding:4px 10px;
+border-radius:6px;
+font-size:12px;
+color:white;
+}
+
+.aktif{background:#2fb36a;}
+.telat{background:#ff4d4d;}
+
+.bottom{
+position:fixed;
+bottom:0;
+width:100%;
+background:white;
+display:flex;
+justify-content:space-around;
+padding:10px;
+box-shadow:0 -3px 10px rgba(0,0,0,0.1);
+}
+
+.bottom div{
+text-align:center;
+font-size:12px;
+cursor:pointer;
+}
+
+.bottom span{
+display:block;
+font-size:22px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="login">
+
+<div class="box">
+
+<h2>Login ISP Admin</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+</div>
+</div>
+
+<!-- APP -->
+
+<div id="app" class="hidden">
+
+<div class="header">
+<b>📡 ISP Admin</b>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+
+<div id="dashboard">
+
+<h3>Dashboard</h3>
+
+<div class="cards">
+
+<div class="card blue">
+Total Pelanggan
+<span id="total">0</span>
+</div>
+
+<div class="card green">
+Aktif
+<span id="aktif">0</span>
+</div>
+
+<div class="card orange">
+Telat
+<span id="telat">0</span>
+</div>
+
+<div class="card purple">
+Pendapatan
+<span id="income">Rp 0</span>
+</div>
+
+</div>
+
+<div class="table">
+
+<h3>Daftar Pelanggan</h3>
+
+<div id="customerList"></div>
+
+</div>
+
+</div>
+
+<!-- TAMBAH PELANGGAN -->
+
+<div id="pelanggan" class="hidden">
+
+<h3>Tambah Pelanggan</h3>
+
+<input id="nama" placeholder="Nama">
+<input id="paket" placeholder="Paket Mbps">
+<input id="harga" placeholder="Harga">
+
+<button onclick="addCustomer()">Tambah</button>
+
+</div>
+
+<!-- SETTINGS -->
+
+<div id="settings" class="hidden">
+
+<h3>Pengaturan</h3>
+
+<button onclick="loadCustomers()">Refresh Data</button>
+
+</div>
+
+</div>
+
+<div class="bottom">
+
+<div onclick="openPage('dashboard')">
+<span>🏠</span>
+Dashboard
+</div>
+
+<div onclick="openPage('pelanggan')">
+<span>👤</span>
+Tambah
+</div>
+
+<div onclick="openPage('settings')">
+<span>⚙️</span>
+Setting
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SUPABASE CONFIG */
+
+const supabaseUrl = "https://abcxyzcompany.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+
+/* LOGIN */
+
+async function login(){
+
+let email=document.getElementById("email").value;
+let password=document.getElementById("password").value;
+
+const { data, error } = await client
+.from("users")
+.select("*")
+.eq("email",email)
+.eq("password",password)
+.single();
+
+if(error || !data){
+
+document.getElementById("msg").innerText="Login gagal";
+return;
+
+}
+
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("app").classList.remove("hidden");
+
+loadCustomers();
+
+}
+
+
+/* LOGOUT */
+
+function logout(){
+
+location.reload();
+
+}
+
+
+/* NAVIGASI */
+
+function openPage(id){
+
+["dashboard","pelanggan","settings"].forEach(p=>{
+document.getElementById(p).classList.add("hidden");
+});
+
+document.getElementById(id).classList.remove("hidden");
+
+}
+
+
+/* LOAD DATA */
+
+async function loadCustomers(){
+
+const { data, error } = await client
+.from("customers")
+.select("*");
+
+if(error){
+
+alert("Error load data");
+return;
+
+}
+
+let list=document.getElementById("customerList");
+list.innerHTML="";
+
+let total=data.length;
+let aktif=0;
+let telat=0;
+let income=0;
+
+data.forEach(c=>{
+
+if(c.status=="aktif") aktif++;
+if(c.status=="telat") telat++;
+
+income+=Number(c.harga);
+
+list.innerHTML+=`
+
+<div class="row">
+
+<div>
+
+<b>${c.nama}</b><br>
+${c.paket} Mbps
+
+<br>
+
+<span class="status ${c.status}">
+${c.status}
+</span>
+
+</div>
+
+<div class="actions">
+
+<button onclick="markPaid('${c.id}')">Bayar</button>
+<button onclick="deleteCustomer('${c.id}')">Hapus</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("total").innerText=total;
+document.getElementById("aktif").innerText=aktif;
+document.getElementById("telat").innerText=telat;
+document.getElementById("income").innerText="Rp "+income;
+
+}
+
+
+/* TAMBAH */
+
+async function addCustomer(){
+
+let nama=document.getElementById("nama").value;
+let paket=document.getElementById("paket").value;
+let harga=Number(document.getElementById("harga").value);
+
+if(!nama||!paket||!harga){
+
+alert("Isi semua data");
+return;
+
+}
+
+await client
+.from("customers")
+.insert([
+{nama:nama,paket:paket,harga:harga,status:"aktif"}
+]);
+
+alert("Pelanggan ditambahkan");
+
+loadCustomers();
+
+}
+
+
+/* BAYAR */
+
+async function markPaid(id){
+
+await client
+.from("customers")
+.update({status:"aktif"})
+.eq("id",id);
+
+loadCustomers();
+
+}
+
+
+/* HAPUS */
+
+async function deleteCustomer(id){
+
+if(!confirm("Hapus pelanggan?")) return;
+
+await client
+.from("customers")
+.delete()
+.eq("id",id);
+
+loadCustomers();
+
+}
+
+</script>
+
+</body>
+</html>
