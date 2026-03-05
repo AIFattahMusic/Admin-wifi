@@ -6,28 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ISP Admin</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
 <style>
 
-*{
-box-sizing:border-box;
-font-family:Arial;
-}
-
 body{
-margin:0;
+font-family:Arial;
 background:#f2f4f7;
-padding-bottom:80px;
-}
-
-.hidden{
-display:none;
-}
-
-/* LOGIN */
-
-.login{
+margin:0;
 display:flex;
 justify-content:center;
 align-items:center;
@@ -45,7 +29,7 @@ box-shadow:0 10px 20px rgba(0,0,0,0.1);
 input{
 width:100%;
 padding:12px;
-margin:8px 0;
+margin:10px 0;
 border-radius:8px;
 border:1px solid #ccc;
 }
@@ -53,102 +37,30 @@ border:1px solid #ccc;
 button{
 width:100%;
 padding:12px;
-border:none;
-border-radius:8px;
 background:#2f65d9;
 color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
 cursor:pointer;
 }
 
-/* HEADER */
-
-.header{
-background:white;
-padding:15px;
-display:flex;
-justify-content:space-between;
-box-shadow:0 2px 5px rgba(0,0,0,0.05);
+.msg{
+margin-top:10px;
+font-weight:bold;
 }
 
-/* CONTAINER */
-
-.container{
-padding:15px;
-}
-
-/* CARDS */
-
-.cards{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
+.dashboard{
+display:none;
+padding:20px;
 }
 
 .card{
+background:#2f65d9;
 color:white;
-padding:15px;
+padding:20px;
 border-radius:10px;
-}
-
-.blue{background:#2f65d9;}
-.green{background:#2fb36a;}
-.orange{background:#ff8b2d;}
-.purple{background:#7b4bff;}
-
-.card span{
-font-size:24px;
-display:block;
-margin-top:5px;
-}
-
-/* TABLE */
-
-.table{
-background:white;
-padding:15px;
-border-radius:10px;
-margin-top:15px;
-}
-
-.row{
-display:flex;
-justify-content:space-between;
-padding:10px 0;
-border-bottom:1px solid #eee;
-}
-
-.status{
-padding:4px 10px;
-border-radius:6px;
-font-size:12px;
-color:white;
-}
-
-.aktif{background:#2fb36a;}
-.telat{background:#ff4d4d;}
-
-/* NAVBAR */
-
-.bottom{
-position:fixed;
-bottom:0;
-width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-padding:10px;
-box-shadow:0 -3px 10px rgba(0,0,0,0.1);
-}
-
-.bottom div{
-text-align:center;
-font-size:12px;
-cursor:pointer;
-}
-
-.bottom span{
-display:block;
-font-size:22px;
+margin:10px 0;
 }
 
 </style>
@@ -157,11 +69,7 @@ font-size:22px;
 
 <body>
 
-<!-- LOGIN PAGE -->
-
-<div id="loginPage" class="login">
-
-<div class="box">
+<div id="login" class="box">
 
 <h2>Login ISP Admin</h2>
 
@@ -170,271 +78,53 @@ font-size:22px;
 
 <button onclick="login()">Login</button>
 
-<p id="msg"></p>
+<div id="msg" class="msg"></div>
 
 </div>
 
+<div id="dashboard" class="dashboard">
+
+<h2>Dashboard ISP</h2>
+
+<div class="card">
+Total Pelanggan : 120
 </div>
 
-<!-- APP -->
+<div class="card">
+Pelanggan Aktif : 95
+</div>
 
-<div id="app" class="hidden">
+<div class="card">
+Pendapatan : Rp 18.500.000
+</div>
 
-<div class="header">
-<b>📡 ISP Admin</b>
 <button onclick="logout()">Logout</button>
-</div>
-
-<div class="container">
-
-<!-- DASHBOARD -->
-
-<div id="dashboard">
-
-<h3>Dashboard</h3>
-
-<div class="cards">
-
-<div class="card blue">
-Total Pelanggan
-<span id="total">0</span>
-</div>
-
-<div class="card green">
-Aktif
-<span id="aktif">0</span>
-</div>
-
-<div class="card orange">
-Telat
-<span id="telat">0</span>
-</div>
-
-<div class="card purple">
-Pendapatan
-<span id="income">Rp 0</span>
-</div>
-
-</div>
-
-<div class="table">
-
-<h3>Daftar Pelanggan</h3>
-
-<div id="customerList"></div>
-
-</div>
-
-</div>
-
-<!-- PELANGGAN -->
-
-<div id="pelanggan" class="hidden">
-
-<h3>Tambah Pelanggan</h3>
-
-<input id="nama" placeholder="Nama">
-<input id="paket" placeholder="Paket Mbps">
-<input id="harga" placeholder="Harga">
-
-<button onclick="addCustomer()">Tambah</button>
-
-</div>
-
-<!-- PAKET -->
-
-<div id="paketPage" class="hidden">
-
-<h3>Paket Internet</h3>
-
-<div class="table">
-
-<div class="row">
-<div>10 Mbps</div>
-<div>Rp150.000</div>
-</div>
-
-<div class="row">
-<div>20 Mbps</div>
-<div>Rp250.000</div>
-</div>
-
-<div class="row">
-<div>30 Mbps</div>
-<div>Rp350.000</div>
-</div>
-
-</div>
-
-</div>
-
-<!-- SETTINGS -->
-
-<div id="settings" class="hidden">
-
-<h3>Pengaturan</h3>
-
-<p>Aplikasi ISP Admin</p>
-
-</div>
-
-</div>
-
-<div class="bottom">
-
-<div onclick="openPage('dashboard')">
-<span>🏠</span>
-Dashboard
-</div>
-
-<div onclick="openPage('pelanggan')">
-<span>👤</span>
-Pelanggan
-</div>
-
-<div onclick="openPage('paketPage')">
-<span>🌐</span>
-Paket
-</div>
-
-<div onclick="openPage('settings')">
-<span>⚙️</span>
-Setting
-</div>
-
-</div>
 
 </div>
 
 <script>
 
-/* SUPABASE */
-
-const SUPABASE_URL="https://PROJECT.supabase.co";
-const SUPABASE_KEY="PUBLIC_ANON_KEY";
-
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-
-/* LOGIN */
-
-async function login(){
+function login(){
 
 let email=document.getElementById("email").value;
 let password=document.getElementById("password").value;
 
-const { data, error } = await client.auth.signInWithPassword({
-email: email,
-password: password
-});
+if(email=="admin@gmail.com" && password=="123456"){
 
-if(error){
-
-document.getElementById("msg").innerText="Login gagal";
+document.getElementById("login").style.display="none";
+document.getElementById("dashboard").style.display="block";
 
 }else{
 
-document.getElementById("loginPage").classList.add("hidden");
-document.getElementById("app").classList.remove("hidden");
-
-loadCustomers();
+document.getElementById("msg").innerText="Login gagal";
 
 }
 
 }
 
-/* LOGOUT */
+function logout(){
 
-async function logout(){
-
-await client.auth.signOut();
 location.reload();
-
-}
-
-
-/* PAGE NAVIGATION */
-
-function openPage(id){
-
-["dashboard","pelanggan","paketPage","settings"].forEach(p=>{
-document.getElementById(p).classList.add("hidden");
-});
-
-document.getElementById(id).classList.remove("hidden");
-
-}
-
-
-/* LOAD DATA */
-
-async function loadCustomers(){
-
-const {data}=await client
-.from("customers")
-.select("*");
-
-let list=document.getElementById("customerList");
-list.innerHTML="";
-
-let total=data.length;
-let aktif=0;
-let telat=0;
-let income=0;
-
-data.forEach(c=>{
-
-if(c.status=="aktif") aktif++;
-if(c.status=="telat") telat++;
-
-income+=Number(c.harga);
-
-list.innerHTML+=`
-
-<div class="row">
-
-<div>
-<b>${c.nama}</b><br>
-${c.paket} Mbps
-</div>
-
-<div>
-<span class="status ${c.status}">
-${c.status}
-</span>
-</div>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("total").innerText=total;
-document.getElementById("aktif").innerText=aktif;
-document.getElementById("telat").innerText=telat;
-document.getElementById("income").innerText="Rp "+income;
-
-}
-
-
-/* ADD CUSTOMER */
-
-async function addCustomer(){
-
-let nama=document.getElementById("nama").value;
-let paket=document.getElementById("paket").value;
-let harga=document.getElementById("harga").value;
-
-await client
-.from("customers")
-.insert([
-{nama:nama,paket:paket,harga:harga,status:"aktif"}
-]);
-
-alert("Pelanggan ditambahkan");
-
-loadCustomers();
 
 }
 
