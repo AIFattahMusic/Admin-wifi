@@ -4,63 +4,119 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ISP Admin</title>
+<title>ISP Admin Dashboard</title>
 
 <style>
 
-body{
+*{
+box-sizing:border-box;
 font-family:Arial;
-background:#f2f4f7;
+}
+
+body{
 margin:0;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+background:#f2f4f7;
+padding-bottom:80px;
 }
 
-.box{
+/* HEADER */
+
+.header{
 background:white;
-padding:30px;
-border-radius:12px;
-width:340px;
-box-shadow:0 10px 20px rgba(0,0,0,0.1);
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
-input{
-width:100%;
-padding:12px;
-margin:10px 0;
-border-radius:8px;
-border:1px solid #ccc;
+.header h2{
+margin:0;
 }
 
-button{
-width:100%;
-padding:12px;
-background:#2f65d9;
-color:white;
-border:none;
-border-radius:8px;
-font-size:16px;
-cursor:pointer;
+/* CONTAINER */
+
+.container{
+padding:15px;
 }
 
-.msg{
-margin-top:10px;
-font-weight:bold;
-}
+/* DASHBOARD CARDS */
 
-.dashboard{
-display:none;
-padding:20px;
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
 }
 
 .card{
-background:#2f65d9;
 color:white;
-padding:20px;
-border-radius:10px;
-margin:10px 0;
+padding:18px;
+border-radius:12px;
+}
+
+.card span{
+display:block;
+font-size:26px;
+margin-top:5px;
+}
+
+.blue{background:#2f65d9;}
+.green{background:#2fb36a;}
+.orange{background:#ff8b2d;}
+.purple{background:#7b4bff;}
+
+/* TABLE */
+
+.table{
+background:white;
+border-radius:12px;
+padding:15px;
+margin-top:15px;
+box-shadow:0 5px 10px rgba(0,0,0,0.05);
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:10px 0;
+border-bottom:1px solid #eee;
+}
+
+.row:last-child{
+border:none;
+}
+
+.status{
+padding:5px 10px;
+border-radius:6px;
+font-size:12px;
+color:white;
+}
+
+.aktif{background:#2fb36a;}
+.telat{background:#ff4d4d;}
+
+/* NAVBAR */
+
+.bottom{
+position:fixed;
+bottom:0;
+width:100%;
+background:white;
+display:flex;
+justify-content:space-around;
+padding:10px;
+box-shadow:0 -3px 10px rgba(0,0,0,0.1);
+}
+
+.bottom div{
+text-align:center;
+font-size:12px;
+}
+
+.bottom span{
+display:block;
+font-size:22px;
 }
 
 </style>
@@ -69,66 +125,103 @@ margin:10px 0;
 
 <body>
 
-<div id="login" class="box">
+<div class="header">
+<h2>📡 ISP Admin</h2>
+<div>Admin</div>
+</div>
 
-<h2>Login ISP Admin</h2>
+<div class="container">
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<h3>Dashboard Pelanggan</h3>
 
-<button onclick="login()">Login</button>
+<div class="cards">
 
-<div id="msg" class="msg"></div>
+<div class="card blue">
+Total Pelanggan
+<span>120</span>
+</div>
+
+<div class="card green">
+Pelanggan Aktif
+<span>95</span>
+</div>
+
+<div class="card orange">
+Telat Bayar
+<span>25</span>
+</div>
+
+<div class="card purple">
+Pendapatan
+<span>Rp 18.500.000</span>
+</div>
 
 </div>
 
-<div id="dashboard" class="dashboard">
+<div class="table">
 
-<h2>Dashboard ISP</h2>
+<h3>Daftar Pelanggan</h3>
 
-<div class="card">
-Total Pelanggan : 120
+<div class="row">
+<div>
+<b>Budi Santoso</b><br>
+20 Mbps
 </div>
 
-<div class="card">
-Pelanggan Aktif : 95
+<div>
+<span class="status aktif">Aktif</span>
+</div>
 </div>
 
-<div class="card">
-Pendapatan : Rp 18.500.000
+<div class="row">
+<div>
+<b>Siti Aminah</b><br>
+10 Mbps
 </div>
 
-<button onclick="logout()">Logout</button>
+<div>
+<span class="status telat">Telat</span>
+</div>
+</div>
+
+<div class="row">
+<div>
+<b>Andi Pratama</b><br>
+30 Mbps
+</div>
+
+<div>
+<span class="status aktif">Aktif</span>
+</div>
+</div>
 
 </div>
 
-<script>
+</div>
 
-function login(){
+<div class="bottom">
 
-let email=document.getElementById("email").value;
-let password=document.getElementById("password").value;
+<div>
+<span>🏠</span>
+Dashboard
+</div>
 
-if(email=="admin@gmail.com" && password=="123456"){
+<div>
+<span>👤</span>
+Pelanggan
+</div>
 
-document.getElementById("login").style.display="none";
-document.getElementById("dashboard").style.display="block";
+<div>
+<span>🌐</span>
+Paket
+</div>
 
-}else{
+<div>
+<span>⚙️</span>
+Pengaturan
+</div>
 
-document.getElementById("msg").innerText="Login gagal";
-
-}
-
-}
-
-function logout(){
-
-location.reload();
-
-}
-
-</script>
+</div>
 
 </body>
 </html>
