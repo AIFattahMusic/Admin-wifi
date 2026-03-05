@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ISP Admin</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 
@@ -24,6 +25,8 @@ padding-bottom:80px;
 display:none;
 }
 
+/* LOGIN */
+
 .login{
 display:flex;
 justify-content:center;
@@ -35,7 +38,7 @@ height:100vh;
 background:white;
 padding:30px;
 border-radius:12px;
-width:330px;
+width:340px;
 box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
@@ -49,14 +52,15 @@ border:1px solid #ccc;
 
 button{
 width:100%;
-padding:10px;
+padding:12px;
 border:none;
 border-radius:8px;
 background:#2f65d9;
 color:white;
 cursor:pointer;
-margin-top:5px;
 }
+
+/* HEADER */
 
 .header{
 background:white;
@@ -66,9 +70,13 @@ justify-content:space-between;
 box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
 
+/* CONTAINER */
+
 .container{
 padding:15px;
 }
+
+/* CARDS */
 
 .cards{
 display:grid;
@@ -93,6 +101,8 @@ display:block;
 margin-top:5px;
 }
 
+/* TABLE */
+
 .table{
 background:white;
 padding:15px;
@@ -107,12 +117,6 @@ padding:10px 0;
 border-bottom:1px solid #eee;
 }
 
-.actions button{
-width:auto;
-padding:5px 8px;
-margin-left:5px;
-}
-
 .status{
 padding:4px 10px;
 border-radius:6px;
@@ -122,6 +126,8 @@ color:white;
 
 .aktif{background:#2fb36a;}
 .telat{background:#ff4d4d;}
+
+/* NAVBAR */
 
 .bottom{
 position:fixed;
@@ -146,11 +152,12 @@ font-size:22px;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN PAGE -->
 
 <div id="loginPage" class="login">
 
@@ -166,6 +173,7 @@ font-size:22px;
 <p id="msg"></p>
 
 </div>
+
 </div>
 
 <!-- APP -->
@@ -219,7 +227,7 @@ Pendapatan
 
 </div>
 
-<!-- TAMBAH PELANGGAN -->
+<!-- PELANGGAN -->
 
 <div id="pelanggan" class="hidden">
 
@@ -233,13 +241,40 @@ Pendapatan
 
 </div>
 
+<!-- PAKET -->
+
+<div id="paketPage" class="hidden">
+
+<h3>Paket Internet</h3>
+
+<div class="table">
+
+<div class="row">
+<div>10 Mbps</div>
+<div>Rp150.000</div>
+</div>
+
+<div class="row">
+<div>20 Mbps</div>
+<div>Rp250.000</div>
+</div>
+
+<div class="row">
+<div>30 Mbps</div>
+<div>Rp350.000</div>
+</div>
+
+</div>
+
+</div>
+
 <!-- SETTINGS -->
 
 <div id="settings" class="hidden">
 
 <h3>Pengaturan</h3>
 
-<button onclick="loadCustomers()">Refresh Data</button>
+<p>Aplikasi ISP Admin</p>
 
 </div>
 
@@ -254,7 +289,12 @@ Dashboard
 
 <div onclick="openPage('pelanggan')">
 <span>👤</span>
-Tambah
+Pelanggan
+</div>
+
+<div onclick="openPage('paketPage')">
+<span>🌐</span>
+Paket
 </div>
 
 <div onclick="openPage('settings')">
@@ -268,12 +308,12 @@ Setting
 
 <script>
 
-/* SUPABASE CONFIG */
+/* SUPABASE */
 
-const supabaseUrl = "https://abcxyzcompany.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const SUPABASE_URL="https://PROJECT.supabase.co";
+const SUPABASE_KEY="PUBLIC_ANON_KEY";
 
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 
 /* LOGIN */
@@ -283,19 +323,16 @@ async function login(){
 let email=document.getElementById("email").value;
 let password=document.getElementById("password").value;
 
-const { data, error } = await client
-.from("users")
-.select("*")
-.eq("email",email)
-.eq("password",password)
-.single();
+const { data, error } = await client.auth.signInWithPassword({
+email: email,
+password: password
+});
 
-if(error || !data){
+if(error){
 
 document.getElementById("msg").innerText="Login gagal";
-return;
 
-}
+}else{
 
 document.getElementById("loginPage").classList.add("hidden");
 document.getElementById("app").classList.remove("hidden");
@@ -304,21 +341,23 @@ loadCustomers();
 
 }
 
+}
 
 /* LOGOUT */
 
-function logout(){
+async function logout(){
 
+await client.auth.signOut();
 location.reload();
 
 }
 
 
-/* NAVIGASI */
+/* PAGE NAVIGATION */
 
 function openPage(id){
 
-["dashboard","pelanggan","settings"].forEach(p=>{
+["dashboard","pelanggan","paketPage","settings"].forEach(p=>{
 document.getElementById(p).classList.add("hidden");
 });
 
@@ -331,16 +370,9 @@ document.getElementById(id).classList.remove("hidden");
 
 async function loadCustomers(){
 
-const { data, error } = await client
+const {data}=await client
 .from("customers")
 .select("*");
-
-if(error){
-
-alert("Error load data");
-return;
-
-}
 
 let list=document.getElementById("customerList");
 list.innerHTML="";
@@ -362,23 +394,14 @@ list.innerHTML+=`
 <div class="row">
 
 <div>
-
 <b>${c.nama}</b><br>
 ${c.paket} Mbps
+</div>
 
-<br>
-
+<div>
 <span class="status ${c.status}">
 ${c.status}
 </span>
-
-</div>
-
-<div class="actions">
-
-<button onclick="markPaid('${c.id}')">Bayar</button>
-<button onclick="deleteCustomer('${c.id}')">Hapus</button>
-
 </div>
 
 </div>
@@ -395,20 +418,13 @@ document.getElementById("income").innerText="Rp "+income;
 }
 
 
-/* TAMBAH */
+/* ADD CUSTOMER */
 
 async function addCustomer(){
 
 let nama=document.getElementById("nama").value;
 let paket=document.getElementById("paket").value;
-let harga=Number(document.getElementById("harga").value);
-
-if(!nama||!paket||!harga){
-
-alert("Isi semua data");
-return;
-
-}
+let harga=document.getElementById("harga").value;
 
 await client
 .from("customers")
@@ -417,36 +433,6 @@ await client
 ]);
 
 alert("Pelanggan ditambahkan");
-
-loadCustomers();
-
-}
-
-
-/* BAYAR */
-
-async function markPaid(id){
-
-await client
-.from("customers")
-.update({status:"aktif"})
-.eq("id",id);
-
-loadCustomers();
-
-}
-
-
-/* HAPUS */
-
-async function deleteCustomer(id){
-
-if(!confirm("Hapus pelanggan?")) return;
-
-await client
-.from("customers")
-.delete()
-.eq("id",id);
 
 loadCustomers();
 
