@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>ISP Billing</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f2f4f8;
+margin:0;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+margin:20px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:15px;
+background:#2563eb;
+border:none;
+color:white;
+border-radius:6px;
+font-weight:bold;
+}
+
+.top{
+background:#1e40af;
+color:white;
+padding:15px;
+font-size:18px;
+display:flex;
+justify-content:space-between;
+}
+
+.stat{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.box{
+padding:15px;
+color:white;
+border-radius:8px;
+}
+
+.blue{background:#3b82f6}
+.green{background:#22c55e}
+.red{background:#ef4444}
+.purple{background:#8b5cf6}
+
+.user{
+border-bottom:1px solid #eee;
+padding:10px 0;
+display:flex;
+justify-content:space-between;
+}
+
+.small{
+font-size:12px;
+color:#666;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="card">
+
+<h2>Login Admin</h2>
+
+<input id="email" placeholder="Email">
+
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="app" style="display:none">
+
+<div class="top">
+
+<span>ISP Billing</span>
+
+<span onclick="logout()">Logout</span>
+
+</div>
+
+<div class="card">
+
+<div class="stat">
+
+<div class="box blue">
+Total
+<h2 id="total">0</h2>
+</div>
+
+<div class="box green">
+Aktif
+<h2 id="aktif">0</h2>
+</div>
+
+<div class="box red">
+Telat
+<h2 id="telat">0</h2>
+</div>
+
+<div class="box purple">
+Income
+<h2 id="income">0</h2>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Tambah Paket</h3>
+
+<input id="nama_paket" placeholder="Nama paket">
+
+<input id="speed" placeholder="Speed">
+
+<input id="harga_paket" placeholder="Harga">
+
+<button onclick="addPaket()">Tambah Paket</button>
+
+</div>
+
+<div class="card">
+
+<h3>Tambah Pelanggan</h3>
+
+<input id="nama" placeholder="Nama pelanggan">
+
+<select id="paket"></select>
+
+<button onclick="addUser()">Tambah</button>
+
+</div>
+
+<div class="card">
+
+<h3>Daftar Pelanggan</h3>
+
+<div id="users"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+"https://xbtuqubynkcqsiwavxad.supabase.co",
+"sb_publishable_V0DzqUUUFKhFpn3w3dJiPw_rqnzkWo4"
+)
+
+async function login(){
+
+let email=document.getElementById("email").value
+let password=document.getElementById("password").value
+
+const {error}=await supabase.auth.signInWithPassword({email,password})
+
+if(error){
+
+alert("Login gagal")
+
+}else{
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("app").style.display="block"
+
+loadPaket()
+loadUsers()
+
+}
+
+}
+
+async function logout(){
+
+await supabase.auth.signOut()
+
+location.reload()
+
+}
+
+async function addPaket(){
+
+let nama=document.getElementById("nama_paket").value
+let speed=document.getElementById("speed").value
+let harga=document.getElementById("harga_paket").value
+
+await supabase.from("paket").insert([{nama,speed,harga}])
+
+loadPaket()
+
+}
+
+async function loadPaket(){
+
+const {data}=await supabase.from("paket").select("*")
+
+let select=document.getElementById("paket")
+
+select.innerHTML=""
+
+data.forEach(p=>{
+
+select.innerHTML+=`
+<option value="${p.nama}|${p.harga}">
+${p.nama} ${p.speed} Rp${p.harga}
+</option>
+`
+
+})
+
+}
+
+async function addUser(){
+
+let nama=document.getElementById("nama").value
+let paket=document.getElementById("paket").value
+
+let p=paket.split("|")
+
+let today=new Date()
+
+let daftar=today.toISOString().split("T")[0]
+
+today.setDate(today.getDate()+30)
+
+let tempo=today.toISOString().split("T")[0]
+
+await supabase.from("pelanggan").insert([{
+
+nama:nama,
+paket:p[0],
+harga:p[1],
+tanggal_daftar:daftar,
+jatuh_tempo:tempo
+
+}])
+
+loadUsers()
+
+}
+
+async function bayar(id){
+
+let today=new Date()
+
+today.setDate(today.getDate()+30)
+
+let tempo=today.toISOString().split("T")[0]
+
+await supabase.from("pelanggan")
+.update({jatuh_tempo:tempo})
+.eq("id",id)
+
+loadUsers()
+
+}
+
+async function loadUsers(){
+
+const {data}=await supabase
+.from("pelanggan")
+.select("*")
+.order("id",{ascending:false})
+
+let list=document.getElementById("users")
+
+list.innerHTML=""
+
+let total=0
+let aktif=0
+let telat=0
+let income=0
+
+data.forEach(u=>{
+
+total++
+income+=parseInt(u.harga)
+
+let today=new Date()
+let tempo=new Date(u.jatuh_tempo)
+
+let status="Aktif"
+
+if(today>tempo){
+
+status="Telat"
+telat++
+
+}else{
+
+aktif++
+
+}
+
+list.innerHTML+=`
+
+<div class="user">
+
+<div>
+
+<b>${u.nama}</b>
+<div class="small">${u.paket}</div>
+<div class="small">Tempo ${u.jatuh_tempo}</div>
+
+</div>
+
+<div>
+
+<button onclick="bayar(${u.id})">Bayar</button>
+
+</div>
+
+</div>
+
+`
+
+})
+
+document.getElementById("total").innerText=total
+document.getElementById("aktif").innerText=aktif
+document.getElementById("telat").innerText=telat
+document.getElementById("income").innerText="Rp "+income
+
+}
+
+</script>
+
+</body>
+</html>
